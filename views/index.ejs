@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>drag</title>
+
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      display: flex;
+      justify-content: flex-start;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .main-box {
+      position: relative;
+      width: 100vw;
+      max-width: 375px;
+      height: auto;
+      min-height: 677px;
+      overflow: hidden;
+      overflow-y: auto;
+      border: 1px solid #333;
+    }
+
+    .function-box {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      width: 100vw;
+      max-width: 375px;
+    }
+
+    .select-box {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-flow: wrap;
+      width: 300px;
+      height: 50px;
+      list-style-type: none;
+    }
+
+    .select-box li {
+      margin: 0;
+      padding: 0;
+      flex: 1;
+      height: 30px;
+      line-height: 30px;
+      cursor: pointer;
+    }
+
+    .select-box li:hover {
+      text-decoration: underline;
+    }
+
+    .element-box {
+      width: 100%
+    }
+
+    .img-box,
+    .text-box {
+      width: 100%;
+      display: none;
+    }
+    .el-content-box {
+      display: none;
+    }
+
+    input {
+      display: block;
+      margin-bottom: 30px;
+      padding: 5px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    input[type='color'] {
+      height: 40px;
+    }
+    .btn {
+      padding: 8px 16px;
+      width: auto;
+      height: 36px;
+      outline: none;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .btn:active {
+      border: none;
+      outline: none;
+      box-shadow: 3px 3px 8px #333;
+    }
+    #poster {
+      display: none;
+    }
+  </style>
+  <script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+</head>
+
+<body>
+  <div class="main-box" id="box" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+  <div class="function-box">
+    <ul class="select-box">
+      <li data-type="img">图片</li>
+      <li data-type="text">文字</li>
+      <li data-type="link">链接</li>
+      <li data-type="bg">背景图</li>
+    </ul>
+    <button class="btn" id="makePoster">生成海报</button>
+    <img src="" id="poster" crossOrigin="Anonymous">
+    <div class="element-box">
+      <div class="img-box">
+
+      </div>
+      <div class="text-box">
+
+      </div>
+      <div class="link-box">
+
+      </div>
+      <div class="bg-box">
+
+      </div>
+
+
+      <div class="el-content-box">
+        <p><label for="elWidth">宽度: </label> <input type="text" id="elWidth"></p>
+        <p><label for="elHeight">高度: </label> <input type="text" id="elHeight"></p>
+        <p><label for="elfontSize">大小</label> <input type="text" id="elFontSize"></p>
+        <p><label for="elColor">颜色</label> <input type="color" id="elColor"></p>
+        <p><label for="elBgColor">背景色</label> <input type="color" id="elBgColor"></p>
+        <p><button id="removeEl" class="btn">移除</button></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const globalObj = {
+      elementType: {
+        'img': {
+          el: 'img-box',
+          content: `<input type="file" id="inputImg" multiple>`
+        },
+        'text': {
+          el: 'text-box',
+          content: `<input type="text" id="inputText" value="">`
+        },
+        'link': {
+          el: 'link-box',
+          content: `<input type="text" id="inputLink" placeholder="标题 链接">`
+        },
+        'bg': {
+          el: 'bg-box',
+          content: `<input type="file" id="inputBg">`
+        }
+      },
+      currentType: null, // 当前元素类型
+      currentId: null, // 当前元素ID
+    }
+
+    $('.select-box').on('click', function (e) {
+      currentType = e.target.dataset.type;
+      $(`.${globalObj.elementType[currentType].el}`)
+        .show()
+        .empty()
+        .append(globalObj.elementType[currentType].content)
+        .siblings()
+        .hide();
+      if (currentType === 'img') {
+        selectImg();
+      } else if (currentType === 'text') {
+        writeText();
+      } else if (currentType === 'link') {
+        addLink();
+      } else if (currentType === 'bg') {
+        selectBg();
+      }
+    })
+
+    $('#box').on('click', function (e) {
+      const $target = e.target;
+      const $el = $(`#${e.target.id}`);
+
+      globalObj.currentId = $target.id;
+      $('.el-content-box').show();
+      $('#elWidth').val($target.clientWidth);
+      $('#elHeight').val($target.clientHeight);
+      $('#elFontSize').val($el.css('font-size'));
+      $('#elColor').val(rgbToHex(($el.css('color'))));
+      $('#elBgColor').val(rgbToHex($el.css('background-color')));
+    })
+
+    // 选择图片文件
+    function selectImg() {
+      $('#inputImg').on('change', function () {
+        const fileList = this.files;
+        const reader = new FileReader();
+        reader.readAsDataURL(fileList[0]);
+        reader.onload = function (e) {
+          const random = getRandom();
+          const html =
+            `<img src="${e.target.result}" alt="" id="${random}" style="position: absolute;width:120px;height:120px;" draggable="true" ondragstart="drag(event)">`
+          $('.img-box').append(html);
+        }
+      });
+    }
+
+    // 输入文字
+    function writeText() {
+      $('#inputText').on('keyup', function (e) {
+        if (e.keyCode === 13) {
+          const random = getRandom();
+          const html =
+            `<span id="${random}" style="position: absolute;" draggable="true" ondragstart="drag(event)">${e.target.value}</sapn>`
+          $('.text-box').append(html);
+        }
+      })
+    }
+
+    // 添加链接
+    function addLink() {
+      $('#inputLink').on('keyup', function (e) {
+        if (e.keyCode === 13) {
+          const random = getRandom();
+          const arr = (e.target.value).split(' ');
+          const html =
+            `<a href="${arr[1]}" id="${random}" target="_blank" rel="noopener noreferrer" style="position: absolute;" draggable="true" ondragstart="drag(event)">${arr[0]}</a>`
+          $('.link-box').append(html);
+        }
+      })
+    }
+
+    // 选择背景图
+    function selectBg() {
+      $('#inputBg').on('change', function () {
+        const fileList = this.files;
+        const reader = new FileReader();
+        reader.readAsDataURL(fileList[0]);
+
+        reader.onload = function (e) {
+          console.log(e)
+          $('.main-box').css("background-image", `url('${e.target.result}')`).css("background-size", "100% 100%");
+        }
+      });
+    }
+
+    // 元素可推动
+    function listenEl(id) {
+      $(`#${id}`).on('mousedown', function (e) {
+        const $this = $(this);
+        const offset = $this.offset();
+        const x1 = event.clientX - offset.left;
+        const y1 = event.clientY - offset.top;
+
+
+        $('#box').on('mousemove', function (e) {
+          $this.css("left", (event.clientX - x1) + "px").css("top", (event.clientY - y1) + "px");
+        });
+
+        $('#box').on('mouseup', function (e) {
+          $(this).off('mouseup').off("mousemove");
+        });
+      })
+    }
+
+
+
+    $('#elWidth').on('change', function (e) {
+      $(`#${globalObj.currentId}`).css('width', e.target.value)
+    });
+    $('#elHeight').on('change', function (e) {
+      $(`#${globalObj.currentId}`).css('height', e.target.value)
+    });
+    $('#elFontSize').on('change', function (e) {
+      $(`#${globalObj.currentId}`).css('font-size', e.target.value)
+    });
+    $('#elColor').on('change', function (e) {
+      $(`#${globalObj.currentId}`).css('color', e.target.value);
+    });
+    $('#elBgColor').on('change', function (e) {
+      $(`#${globalObj.currentId}`).css('background-color', e.target.value);
+    });
+    $('#removeEl').on('click', function() {
+      if (confirm('是否确认移除当前元素')) {
+        $(`#${globalObj.currentId}`).remove();
+        $('.el-content-box').find('input').val('');
+        globalObj.currentId = null;
+      }
+    })
+
+
+    // 生成随机值
+    function getRandom() {
+      return Math.random().toString(36).substr(2);
+    }
+
+    function drag(ev) {
+      ev.dataTransfer.setData("Text", ev.target.id);
+    }
+
+    function drop(ev) {
+      ev.preventDefault();
+      var data = ev.dataTransfer.getData("Text");
+      ev.target.appendChild(document.getElementById(data));
+      listenEl(data);
+    }
+
+    function rgbToHex(color) {
+      let rgb = color.split(',');
+      let r = parseInt(rgb[0].split('(')[1]);
+      let g = parseInt(rgb[1]);
+      let b = parseInt(rgb[2].split(')')[0]);
+ 
+      const hex = "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    return hex;
+    }
+
+    function allowDrop(ev) {
+      ev.preventDefault();
+    }
+
+    $('#makePoster').on('click', async () => {
+      // const styleLabel = $('style').html(); // 页面样式
+      const $box = $('#box');
+      const htmlContent = $box.html();
+      const width = $box.width();
+      const height =  $box.height();
+      const boxHtml = `<div style='position: relative;width: 100vw;max-width: 375px;height: auto;min-height: 677px;overflow: hidden;overflow-y: auto;${$box.attr('style')}'>${htmlContent}</div>`;
+      let res = await requestApi('/poster', {
+        html: boxHtml,
+        width,
+        height
+      })
+      if (res.code === 200) {
+        $('#poster')
+        .attr('src' , res.path.replace('http:', 'https:'))
+        .css('width', `${width}px`)
+        .css('height', `${height}px`)
+        .show();
+      }
+      
+    })
+
+
+    function requestApi(url, data, method='POST') {
+      return fetch(url, {
+        body: JSON.stringify(data),
+        cache: 'no-cache',
+        credentials: 'include', 
+        headers: {
+          'content-type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
+        method: 'POST',
+        mode: 'cors'
+      })
+      .then(res => res.json())
+    }
+
+  </script>
+
+
+</body>
+
+</html>
