@@ -2,7 +2,7 @@ const OSS = require('ali-oss')
 const path = require('path');
 
 const client = new OSS({
-  endpoint: '***',
+  endpoint: 'oss-cn-***.aliyuncs.com',
   accessKeyId: '***',
   accessKeySecret: '***',
   bucket: '***'
@@ -18,7 +18,7 @@ class api_oss {
       try {
         const root = path.resolve(__dirname, '../public/' + type);
         const result = await client.put(localpath, root + '/' + name);
-        resolve(result.url)
+        resolve(result.url.replace('http:', 'https:'))
       } catch (e) {
         reject(e)
       } 

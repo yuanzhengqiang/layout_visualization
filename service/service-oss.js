@@ -12,7 +12,7 @@ class service_oss {
     const onlinePath = await oss.put(url, name, type).then((res) => {
       return res;
     })
-    await redis.setKey(name, path)
+    await redis.setKey(name, onlinePath)
     return onlinePath; 
   }
 
