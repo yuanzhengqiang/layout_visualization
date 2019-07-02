@@ -97,6 +97,7 @@
       outline: none;
       border: 1px solid #ccc;
       border-radius: 6px;
+      background-color: #fff;
     }
     .btn:active {
       border: none;
@@ -104,7 +105,11 @@
       box-shadow: 3px 3px 8px #333;
     }
     #poster {
+      border: 1px solid #ddd;
       display: none;
+    }
+    #fileTitle {
+      margin-bottom: 8px;
     }
   </style>
   <script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
@@ -119,8 +124,14 @@
       <li data-type="link">链接</li>
       <li data-type="bg">背景图</li>
     </ul>
-    <button class="btn" id="makePoster">生成海报</button>
-    <img src="" id="poster" crossOrigin="Anonymous">
+    <div>
+      <input type="text" placeholder="标题" id="fileTitle">
+      <button class="btn" id="makePoster">生成海报</button>
+      <button class="btn" id="makePDF">生成PDF</button>
+    </div>
+    
+    
+    <a id="pdf"></a>
     <div class="element-box">
       <div class="img-box">
 
@@ -135,7 +146,6 @@
 
       </div>
 
-
       <div class="el-content-box">
         <p><label for="elWidth">宽度: </label> <input type="text" id="elWidth"></p>
         <p><label for="elHeight">高度: </label> <input type="text" id="elHeight"></p>
@@ -146,7 +156,7 @@
       </div>
     </div>
   </div>
-
+  <img src="" id="poster" crossOrigin="Anonymous">
   <script>
     const globalObj = {
       elementType: {
@@ -251,7 +261,6 @@
         reader.readAsDataURL(fileList[0]);
 
         reader.onload = function (e) {
-          console.log(e)
           $('.main-box').css("background-image", `url('${e.target.result}')`).css("background-size", "100% 100%");
         }
       });
@@ -265,7 +274,6 @@
         const x1 = event.clientX - offset.left;
         const y1 = event.clientY - offset.top;
 
-
         $('#box').on('mousemove', function (e) {
           $this.css("left", (event.clientX - x1) + "px").css("top", (event.clientY - y1) + "px");
         });
@@ -277,7 +285,9 @@
     }
 
 
-
+    /**
+     * change事件改变元素状态
+     */
     $('#elWidth').on('change', function (e) {
       $(`#${globalObj.currentId}`).css('width', e.target.value)
     });
@@ -333,23 +343,37 @@
     }
 
     $('#makePoster').on('click', async () => {
-      // const styleLabel = $('style').html(); // 页面样式
       const $box = $('#box');
       const htmlContent = $box.html();
       const width = $box.width();
       const height =  $box.height();
-      const boxHtml = `<div style='position: relative;width: 100vw;max-width: 375px;height: auto;min-height: 677px;overflow: hidden;overflow-y: auto;${$box.attr('style')}'>${htmlContent}</div>`;
-      let res = await requestApi('/poster', {
-        html: boxHtml,
-        width,
-        height
-      })
+      const title = ($('#fileTitle').val().trim() || 'poster-' + getRandom() ) + '.png';
+      const html = `<div style='position: relative;width: ${width}px;height: ${height}px;overflow: hidden;overflow-y: auto;${$box.attr('style')}'>${htmlContent}</div>`;
+      const res = await requestApi('/poster', { html, width, height, title })
       if (res.code === 200) {
         $('#poster')
-        .attr('src' , res.path.replace('http:', 'https:'))
+        .attr('src' , res.path)
         .css('width', `${width}px`)
         .css('height', `${height}px`)
         .show();
+      }
+    })
+
+    
+    $('#makePDF').on('click', async () => {
+      const $box = $('#box');
+      const htmlContent = $box.html();
+      const width = $box.width();
+      const height =  $box.height();
+      const title = ($('#fileTitle').val().trim() || 'pdf-' + getRandom()) + '.pdf';
+      const html = `<div style='position: relative;width: ${width}px;height: ${height}px;overflow: hidden;overflow-y: auto;${$box.attr('style')}'>${htmlContent}</div>`;
+      const res = await requestApi('/pdf', { html, width, height, title })
+      if (res.code === 200) {
+        const a = document.createElement('a');
+        a.href = res.path;
+        a.target = '_blank';
+        a.download = title;
+        a.click();
       }
       
     })
