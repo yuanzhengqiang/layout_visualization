@@ -3,7 +3,7 @@ const redis = require('redis');
 const PORT = 6379;
 const HOST = '127.0.0.1';
 
-const client = redis.createClient(PORT, HOST);
+const client = redis.createClient({port:PORT, host:HOST,no_ready_check: true});
 
 class api_redis {
   constructor() {
@@ -12,10 +12,10 @@ class api_redis {
 
   initConnect() {
     client.on('connect', () => {
-      console.log('connect success!')
+      console.log('connect redis success!')
     });
     client.on("error", (err) => {
-      console.log("Error " + err);
+      console.log("Redis Error " + err);
     });
   }
 

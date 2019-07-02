@@ -49,7 +49,7 @@ app.use(async (ctx, next) => {
   }
 })
 // routes
-app.use(index.routes(), index.allowedMethods())
+app.use(routes_index.routes(), routes_index.allowedMethods())
 app.use(routes_api.routes(), routes_api.allowedMethods())
 
 // error-handling
