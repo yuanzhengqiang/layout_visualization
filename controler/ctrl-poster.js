@@ -2,7 +2,7 @@ const service_poster = require('../service/service-poster.js');
 class ctrl_poster {
   constructor() { }
 
-  async get(url=null, name=null, {title, ...params}) {
+  async get({title='', url=null, ...params}) {
     const poster = new service_poster();
     const path = await poster.get(url, title, params);
     const data = {

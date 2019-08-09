@@ -28,8 +28,8 @@ app.use(async (ctx, next) => {
   const start = new Date()
   await next()
   const ms = new Date() - start
-  console.log(`${ctx.method} ${ctx.url} - ${ms}ms`)
 })
+
 app.use(async (ctx, next) => {
   ctx.set("Access-Control-Allow-Origin", '*');
   ctx.set("Access-Control-Allow-Credentials", true);
@@ -49,8 +49,8 @@ app.use(async (ctx, next) => {
   }
 })
 // routes
-app.use(routes_index.routes(), routes_index.allowedMethods())
 app.use(routes_api.routes(), routes_api.allowedMethods())
+app.use(routes_index.routes(), routes_index.allowedMethods())
 
 // error-handling
 app.on('error', (err, ctx) => {

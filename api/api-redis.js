@@ -35,7 +35,7 @@ class api_redis {
     
   }
 
-  getKey(key, callback) {
+  getKey(key) {
     return new Promise((resolve, reject) => {
       client.get(key, (err, res) => {
         if (err) {

@@ -349,7 +349,7 @@
       const height =  $box.height();
       const title = ($('#fileTitle').val().trim() || 'poster-' + getRandom() ) + '.png';
       const html = `<div style='position: relative;width: ${width}px;height: ${height}px;overflow: hidden;overflow-y: auto;${$box.attr('style')}'>${htmlContent}</div>`;
-      const res = await requestApi('/poster', { html, width, height, title })
+      const res = await requestApi('/api/poster', { html, width, height, title })
       if (res.code === 200) {
         $('#poster')
         .attr('src' , res.path)
@@ -367,7 +367,7 @@
       const height =  $box.height();
       const title = ($('#fileTitle').val().trim() || 'pdf-' + getRandom()) + '.pdf';
       const html = `<div style='position: relative;width: ${width}px;height: ${height}px;overflow: hidden;overflow-y: auto;${$box.attr('style')}'>${htmlContent}</div>`;
-      const res = await requestApi('/pdf', { html, width, height, title })
+      const res = await requestApi('/api/pdf', { html, width, height, title })
       if (res.code === 200) {
         const a = document.createElement('a');
         a.href = res.path;

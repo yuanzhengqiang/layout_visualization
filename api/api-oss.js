@@ -1,6 +1,7 @@
 const OSS = require('ali-oss')
 const path = require('path');
 
+
 const client = new OSS({
   endpoint: 'oss-cn-hangzhou.aliyuncs.com',
   accessKeyId: '***',

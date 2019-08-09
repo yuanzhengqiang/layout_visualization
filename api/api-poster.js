@@ -15,6 +15,7 @@ class api_poster {
         '–no-first-run',
         '–no-zygote',
         '–single-process',
+        '--lang=zh-CN',
         '–no-sandbox'
       ]
     });
@@ -24,14 +25,16 @@ class api_poster {
     
     await page.emulate(iPhone8);
     
-    await page.setViewport({width: width+16, height: height+16})
-    url && await page.goto(url);
-    await page.setContent(html, {
+    html && await page.setViewport({width: width+16, height: height+16});
+    
+    url && await page.goto(url, {waitUntil: 'networkidle0'});
+    html && await page.setContent(html, {
       waitUntil: 'networkidle0'
     });
+    await page.waitFor(3000);
     
     await page.setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1')
-    await page.screenshot({
+    html && await page.screenshot({
       path: posterPath,
       quality: 100,
       fullPage: false,
@@ -42,6 +45,10 @@ class api_poster {
         width, 
         height
       }
+    });
+    !html && await page.screenshot({
+      path: posterPath,
+      fullPage: true,
     });
     await browser.close();
     return posterPath;
